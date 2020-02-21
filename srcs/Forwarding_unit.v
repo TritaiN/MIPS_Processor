@@ -30,27 +30,44 @@ module Forwarding_unit(
     output reg[1:0] Forward_B
     );
     
+    //check if ex_mem_write_reg_addr is equal to ex/mem.registerRD
+    //check if mem_wb_write_reg_addr is equal to mem/wb.registerRD
     
-    if(ex_mem_reg_write && 
-    (ex_mem_write_reg_addr != 0) &&
-    (ex_mem_write_reg_addr == id_ex_instr_rs))
-    Forward_A = 2'b10;
-    
-    if(ex_mem_reg_write && 
-    (ex_mem_write_reg_addr != 0) &&
-    (ex_mem_write_reg_addr == id_ex_instr_rt))
-    Forward_B = 2'b10;
-    
-    if(mem_wb_reg_write && 
-    (ex_mem_write_write_reg_addr == id_ex_instr_rs) &&
-    )
-    Forward_A = 2'b01;
-    
-    if(mem_wb_reg_write && 
-    (ex_mem_write_write_reg_addr == id_ex_instr_rt))
-    Forward_B = 2'b01;
-    
-    
+    always @ (*) 
+        begin
+            if(ex_mem_reg_write && 
+            (ex_mem_write_reg_addr != 0) &&
+            (ex_mem_write_reg_addr == id_ex_instr_rs))
+            begin
+                Forward_A = 2'b10;
+            end
+            
+            if(ex_mem_reg_write && 
+            (ex_mem_write_reg_addr != 0) &&
+            (ex_mem_write_reg_addr == id_ex_instr_rt))
+            begin
+            Forward_B = 2'b10;
+            end
+            
+            if(mem_wb_reg_write && 
+            (mem_wb_write_reg_addr != 0) &&
+            !(ex_mem_write_reg_addr == (ex_mem_write_reg_addr != 0) &&
+                (ex_mem_write_reg_addr != id_ex_instr_rs) ) &&
+            mem_wb_write_reg_addr == id_ex_instr_rs)
+            begin
+            Forward_A = 2'b01;
+            end
+            
+            if(mem_wb_reg_write && 
+            (mem_wb_write_reg_addr != 0) &&
+            !(ex_mem_write_reg_addr == (ex_mem_write_reg_addr != 0) &&
+                (ex_mem_write_reg_addr != id_ex_instr_rt) ) &&
+            mem_wb_write_reg_addr == id_ex_instr_rt)
+            begin
+            Forward_B = 2'b01;
+            end
+            
+    end
     
     
     

@@ -30,6 +30,15 @@ module IF_pipe_stage(
     output [9:0] pc_plus4,
     output[31:0] instr
     );
+    
+    wire [9:0] branch_mux_out;
+    reg pc;
+    
+    always @(en)
+        begin
+            pc = 32'd0;
+        end
+    
     //need to add logic for Data_Hazard 
     mux2 #(.mux_width(32)) branch_mux (
         .a(pc_plus4),
