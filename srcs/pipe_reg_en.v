@@ -20,7 +20,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module pipe_reg_en #(parameter WIDTH = 32) (
+module pipe_reg_en #(parameter WIDTH = 10) (
     input clk, reset,
     input en, flush,
     input [WIDTH-1:0] x_in, y_in,

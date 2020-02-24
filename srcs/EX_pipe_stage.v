@@ -21,6 +21,7 @@
 
 module EX_pipe_stage(
     input [31:0] id_ex_instr,
+    input [1:0] id_ex_alu_op,
     input [31:0] id_ex_reg1, id_ex_reg2,
     input [31:0] id_ex_imm_value,
     input [31:0] ex_mem_alu_result,
@@ -30,6 +31,9 @@ module EX_pipe_stage(
     output [31:0] alu_in2_out,
     output [31:0] alu_result
     );
+    
+    wire [31:0] mem_wb_write_back_data, alu_in1, forwardb_output, alu_in2;
+    wire [3:0] ALU_Control;
     
     mux4 #(.mux_width(32)) forwarda_mux (
         .a(id_ex_reg1),

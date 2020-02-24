@@ -35,13 +35,13 @@ module ID_pipe_stage (
     output [9:0] jump_address,
     output branch_taken,
     output [4:0] destination_reg,
-    output mem_to_reg,
+    output reg mem_to_reg,
     output [1:0] alu_op,
-    output mem_read,
-    output mem_write,
-    output alu_src,
-    output reg_write,
-    output jump
+    output reg mem_read,
+    output reg mem_write,
+    output reg alu_src,
+    output reg reg_write,
+    output reg jump
     );
     
     wire eq_test_out;
@@ -53,13 +53,13 @@ module ID_pipe_stage (
     assign eq_test_out = (reg1 ^ reg2 == 32'd0) ? 1'b1 : 1'b0;
 
     //set control signals to 0 if have control hazard
-    assign control_hazard = Data_Hazard || IF_Flush;
+    assign control_hazard = ~Data_Hazard | IF_Flush;
     always @ (Data_Hazard, IF_Flush) 
         begin
-        if (control_hazard = 1'b1)
+        if (control_hazard == 1'b1)
             begin
                 {mem_to_reg, mem_read, mem_write, 
-                alu_src, reg_write, jump, branch} <= 0;
+                alu_src, reg_write, jump} <= 0;
             end
         end
 

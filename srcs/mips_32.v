@@ -31,9 +31,43 @@ module mips_32(
     wire [25:0] inst_25_0;
     wire [1:0] alu_op;
     wire branch, jump, branchsel;
-    //for pipelining
-    wire data_hazard;
-
+    // pipelining
+    wire Data_Hazard;
+    wire [9:0] branch_address, jump_address;
+    wire branch_taken;
+    wire [31:0] instr;
+    wire [9:0] pc_plus4;
+    // hazard detection
+    wire id_ex_mem_read, IF_Flush;
+    wire [4:0] id_ex_destination_reg, if_id_rs, if_id_rt;
+    // if_id pipeline reg
+    wire en;
+    wire [9:0] if_id_pc_plus4, if_id_instr;
+    // id_pipeline stage
+    wire mem_wb_reg_write, Control_Hazard;
+    wire [4:0] mem_wb_destination_reg, destination_reg;
+    wire [31:0] write_back_data, reg1,reg2, imm_value; 
+    // id_ex_pipeline reg
+    wire [31:0] id_ex_instr, id_ex_imm_value, id_ex_reg1, id_ex_reg2;
+    wire id_ex_mem_to_reg, id_ex_mem_write, id_ex_alu_src, id_ex_reg_write;
+    wire [1:0] id_ex_alu_op;   
+    // ex pipeline stage
+    wire [31:0] ex_mem_alu_result, write_back_result, alu_in2_out, alu_result;
+    wire [1:0] Forward_A, Forward_B; 
+    // forwarding unit
+    wire ex_mem_reg_write;
+    wire [4:0] ex_mem_write_reg_addr, id_ex_instr_rs, mem_wb_write_reg_addr;
+    // ex_mem pipeline reg
+    wire [31:0] ex_mem_instr;
+    wire [4:0] ex_mem_destination_reg;
+    wire ex_mem_mem_to_reg, ex_mem_mem_read, ex_mem_mem_write; 
+	// data memory    
+    wire [31:0] mem_read_data;
+    // mem_wb pipeline reg
+    wire [31:0] mem_wb_alu_result, mem_wb_mem_read_data;
+    wire mem_wb_mem_to_reg;    
+    
+    
     //instantiating module by name    
     IF_pipe_stage instruction_fetch(
         .clk(clk),
@@ -64,17 +98,17 @@ module mips_32(
         .reset(reset),
         .en(en),
         .flush(IF_Flush),
-        .x_in(pcplus4), 
+        .x_in(pc_plus4), 
         .y_in(instr),
         .x_out(if_id_pc_plus4),
         .y_out(if_id_instr)
         );
-    
+
     ID_pipe_stage instruction_decode(
         .clk(clk),
         .reset(reset),
-        .pc_plus4(pc_plus4),
-        .instr(instr),
+        .if_id_pc_plus4(if_id_pc_plus4),
+        .if_id_instr(if_id_instr),
         .mem_wb_reg_write(mem_wb_reg_write),
         .mem_wb_write_reg_addr(mem_wb_destination_reg),
         .mem_wb_write_back_data(write_back_data),
@@ -127,11 +161,12 @@ module mips_32(
         .control_e_out(id_ex_reg_write),
         .aluop_out(id_ex_alu_op)
         );
-                       
+      
     EX_pipe_stage execution_stage(
         .id_ex_instr(id_ex_instr),
-        .reg1(reg1),
-        .reg2(reg2),
+        .id_ex_reg1(id_ex_reg1),
+        .id_ex_reg2(id_ex_reg2),
+        .id_ex_alu_op(id_ex_alu_op),
         .id_ex_imm_value(id_ex_imm_value),
         .ex_mem_alu_result(ex_mem_alu_result),
         .mem_wb_write_back_result(write_back_result),
@@ -141,7 +176,7 @@ module mips_32(
         .alu_in2_out(alu_in2_out),
         .alu_result(alu_result)
         );
-                       
+                  
     Forwarding_unit Forwarding_unit(
         .ex_mem_reg_write(ex_mem_reg_write),
         .ex_mem_write_reg_addr(ex_mem_write_reg_addr),
@@ -175,13 +210,10 @@ module mips_32(
         .control_c_out(ex_mem_mem_write),
         .control_d_out(ex_mem_reg_write)
         );
-    
-	);	    
-                        
+                   
     data_memory data_memory(
         .clk(clk),
         .mem_access_addr(ex_mem_alu_result),
-        .mem_write_en(ex_mem_mem_write),
         .mem_write_en(ex_mem_mem_write),
         .mem_read_en(ex_mem_mem_read),
         .mem_read_data(mem_read_data)
