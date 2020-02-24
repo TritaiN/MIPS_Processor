@@ -20,21 +20,22 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module pipe_reg_en #(parameter WIDTH = 8) (
+module pipe_reg_en #(parameter WIDTH = 32) (
     input clk, reset,
     input en, flush,
-    input [WIDTH-1:0] d,
-    output reg [WIDTH-1:0] q
+    input [WIDTH-1:0] x_in, y_in,
+    output reg [WIDTH-1:0] x_out, y_out
     );
     
     always @(posedge clk or posedge reset)
     begin
         if(reset)
-            q <= 0;
+            {x_out, y_out} <= 0;
         else if (flush) 
-            q <= 0;
+            {x_out, y_out} <= 0;
         else if (en) 
-            q <=d;
+            x_out <= x_in;
+            y_out <= y_in;
     end
     
 endmodule

@@ -79,6 +79,16 @@ module mips_32(
         );
                            
     //instantiate IF/ID pipeline register here
+    pipe_reg_en ID_pipeline_reg (
+        .clk(clk),
+        .reset(reset),
+        .en(en),
+        .flush(IF_Flush),
+        .x_in(pcplus4), 
+        .y_in(instr),
+        .x_out(if_id_pc_plus4),
+        .y_out(if_id_instr)
+        );
     
     ID_pipe_stage instruction_decode(
         .clk(clk),
@@ -107,6 +117,37 @@ module mips_32(
         );             
                    
     //instantiate ID/EX pipeline register here    
+    pipe_reg ID_EX_pipeline_reg (
+        .clk(clk),
+        .reset(reset),
+        .data_a_in(if_id_instr),   //data = 32 bits
+        .data_b_in(imm_value),
+        .data_c_in(reg1),
+        .data_d_in(reg2),
+        .addr_a_in(destination_reg),  //addr = 5 bits
+        .addr_b_in(if_id_instr[26:21]),  
+        .addr_c_in(if_id_instr[21:17]),
+        .control_a_in(mem_to_reg),   //control wires
+        .control_b_in(mem_read),
+        .control_c_in(mem_write),
+        .control_d_in(alu_src),
+        .control_e_in(reg_write),
+        .aluop_in(alu_op),
+        .data_a_out(id_ex_instr),
+        .data_b_out(id_ex_imm_value),
+        .data_c_out(id_ex_reg1),    //don't know if should name reg1 or id_ex_reg1
+        .data_d_out(id_ex_reg2),
+        .addr_a_out(id_ex_destination_reg),
+        .addr_b_out(),   //not sure what to name these, rs and rt for forwarding unit
+        .addr_c_out(),
+        .control_a_out(id_ex_mem_to_reg),
+        .control_b_out(id_ex_mem_read),
+        .control_c_out(id_ex_mem_write),
+        .control_d_out(id_ex_alu_src),
+        .control_e_out(id_ex_reg_write),
+        .aluop_out(id_ex_alu_op)
+        );
+    
                        
     EX_pipe_stage execution_stage(
         .id_ex_instr(id_ex_instr),

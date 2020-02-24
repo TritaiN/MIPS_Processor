@@ -33,7 +33,7 @@ module register_file(
     
     reg [31:0] reg_array [31:0];  
   
-    always @ (posedge clk ) begin  
+    always @ (negedge clk ) begin  
            if(reset) begin  
                 reg_array[0] <= 32'b0;  
                 reg_array[1] <= 32'b0;  

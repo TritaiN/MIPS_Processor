@@ -35,37 +35,39 @@ module Forwarding_unit(
     
     always @ (*) 
         begin
-            if(ex_mem_reg_write && 
-            (ex_mem_write_reg_addr != 0) &&
+            // forwarding when have data hazard and not load
+            if(ex_mem_reg_write == 1 & 
+            (ex_mem_write_reg_addr != 5'b00000) &
             (ex_mem_write_reg_addr == id_ex_instr_rs))
-            begin
-                Forward_A = 2'b10;
-            end
+                begin
+                    Forward_A = 2'b10;
+                end
             
-            if(ex_mem_reg_write && 
-            (ex_mem_write_reg_addr != 0) &&
+            if(ex_mem_reg_write == 1 & 
+            (ex_mem_write_reg_addr != 5'b00000) &
             (ex_mem_write_reg_addr == id_ex_instr_rt))
-            begin
-            Forward_B = 2'b10;
-            end
+                begin
+                    Forward_B = 2'b10;
+                end
             
-            if(mem_wb_reg_write && 
-            (mem_wb_write_reg_addr != 0) &&
-            !(ex_mem_write_reg_addr == (ex_mem_write_reg_addr != 0) &&
-                (ex_mem_write_reg_addr != id_ex_instr_rs) ) &&
+            // forwarding when have data hazard and need to load
+            if(mem_wb_reg_write == 1 & 
+            (mem_wb_write_reg_addr != 5'b00000) &
+            !(ex_mem_write_reg_addr == (ex_mem_write_reg_addr != 5'b00000) &
+                (ex_mem_write_reg_addr != id_ex_instr_rs) ) &
             mem_wb_write_reg_addr == id_ex_instr_rs)
-            begin
-            Forward_A = 2'b01;
-            end
-            
-            if(mem_wb_reg_write && 
-            (mem_wb_write_reg_addr != 0) &&
-            !(ex_mem_write_reg_addr == (ex_mem_write_reg_addr != 0) &&
-                (ex_mem_write_reg_addr != id_ex_instr_rt) ) &&
+                begin
+                    Forward_A = 2'b01;
+                end
+                
+            if(mem_wb_reg_write == 1 & 
+            (mem_wb_write_reg_addr != 5'b00000) &
+            !(ex_mem_write_reg_addr == (ex_mem_write_reg_addr != 5'b00000) &
+                (ex_mem_write_reg_addr != id_ex_instr_rt) ) &
             mem_wb_write_reg_addr == id_ex_instr_rt)
-            begin
-            Forward_B = 2'b01;
-            end
+                begin
+                    Forward_B = 2'b01;
+                end
             
     end
     

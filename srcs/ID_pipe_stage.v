@@ -50,7 +50,7 @@ module ID_pipe_stage (
     wire reg_dst;
     assign jump_address = if_id_instr[25:0] << 2;
     assign branch_taken = branch & eq_test_out;
-    assign eq_test_out = (reg1 - reg2 == 0) ? 1 : 0;
+    assign eq_test_out = (reg1 ^ reg2 == 32'd0) ? 1'b1 : 1'b0;
     assign control_hazard = Data_Hazard || IF_Flush;
     
      ALU branch_address_alu (
