@@ -34,7 +34,7 @@ module IF_pipe_stage(
     wire [9:0] branch_mux_out;
     reg pc;
     
-    always @(en)
+    always @(en == 1'b0)
         begin
             pc = 32'd0;
         end

@@ -33,27 +33,7 @@ module mips_32(
     wire branch, jump, branchsel;
     //for pipelining
     wire data_hazard;
-    /*
-    datapath datapath_unit(
-        .clk(clk), 
-        .reset(reset), 
-        .reg_dst(reg_dst), 
-        .reg_write(reg_write),
-        .alu_src(alu_src), 
-        .pc_src(pc_src), 
-        .mem_read(mem_read), 
-        .mem_write(mem_write),
-        .mem_to_reg(mem_to_reg), 
-        .branch(branch),      // branch instructions
-        .branchsel(branchsel),// branch instructions
-        .jump(jump),          // jump instructions
-        .ALU_Control(ALU_Control), 
-        .datapath_result(result),
-        .inst_31_26(inst_31_26), 
-        .inst_5_0(inst_5_0),
-        .inst_25_0(inst_25_0) // jump instruction
-        ); */
-        
+
     //instantiating module by name    
     IF_pipe_stage instruction_fetch(
         .clk(clk),
@@ -96,8 +76,8 @@ module mips_32(
         .pc_plus4(pc_plus4),
         .instr(instr),
         .mem_wb_reg_write(mem_wb_reg_write),
-        .mem_wb_write_reg_addr(mem_wb_write_reg_addr),
-        .mem_wb_write_back_data(mem_wb_write_back_data),
+        .mem_wb_write_reg_addr(mem_wb_destination_reg),
+        .mem_wb_write_back_data(write_back_data),
         .Data_Hazard(Data_Hazard),
         .Control_Hazard(Control_Hazard),
         .reg1(reg1),
@@ -125,8 +105,8 @@ module mips_32(
         .data_c_in(reg1),
         .data_d_in(reg2),
         .addr_a_in(destination_reg),  //addr = 5 bits
-        .addr_b_in(if_id_instr[26:21]),  
-        .addr_c_in(if_id_instr[21:17]),
+        .addr_b_in(if_id_instr[25:21]),  
+        .addr_c_in(if_id_instr[20:16]),
         .control_a_in(mem_to_reg),   //control wires
         .control_b_in(mem_read),
         .control_c_in(mem_write),
@@ -147,7 +127,6 @@ module mips_32(
         .control_e_out(id_ex_reg_write),
         .aluop_out(id_ex_alu_op)
         );
-    
                        
     EX_pipe_stage execution_stage(
         .id_ex_instr(id_ex_instr),
@@ -155,7 +134,7 @@ module mips_32(
         .reg2(reg2),
         .id_ex_imm_value(id_ex_imm_value),
         .ex_mem_alu_result(ex_mem_alu_result),
-        .mem_wb_write_back_result(mem_wb_write_back_result),
+        .mem_wb_write_back_result(write_back_result),
         .id_ex_alu_src(id_ex_alu_src),
         .Forward_A(Forward_A),
         .Forward_B(Forward_B),
@@ -173,18 +152,58 @@ module mips_32(
         .Forward_B(Forward_B)
         );                       
         
-    //instantiate EX/MEM pipeline register here    
+    //instantiate EX/MEM pipeline register here
+    pipe_reg ex_mem_pipeline_reg (
+        .clk(clk),
+        .reset(reset),
+        //inputs
+        .data_a_in(id_ex_instr),   //why does ex_mem need instr?
+        .data_b_in(alu_result),
+        .data_c_in(alu_in2_out),
+        .addr_a_in(id_ex_destination_reg),  //addr = 5 bits
+        .control_a_in(id_ex_mem_to_reg),   //control wires
+        .control_b_in(id_ex_mem_read),
+        .control_c_in(id_ex_mem_write),
+        .control_d_in(id_ex_reg_write),
+        //outputs
+        .data_a_out(ex_mem_instr),
+        .data_b_out(ex_mem_alu_result),
+        .data_c_out(ex_mem_alu_result),    
+        .addr_a_out(ex_mem_destination_reg),
+        .control_a_out(ex_mem_mem_to_reg),
+        .control_b_out(ex_mem_mem_read),
+        .control_c_out(ex_mem_mem_write),
+        .control_d_out(ex_mem_reg_write)
+        );
+    
+	);	    
                         
     data_memory data_memory(
         .clk(clk),
         .mem_access_addr(ex_mem_alu_result),
-        .mem_write_en(mem_write),
+        .mem_write_en(ex_mem_mem_write),
         .mem_write_en(ex_mem_mem_write),
         .mem_read_en(ex_mem_mem_read),
         .mem_read_data(mem_read_data)
         );
                         
     //instantiate MEM/WB pipeline register here
+    pipe_reg mem_wb_pipeline_reg(
+        .clk(clk),
+        .reset(reset),
+        //inputs
+        .data_a_in(ex_mem_alu_result),
+        .data_b_in(mem_read_data),
+        .addr_a_in(ex_mem_destination_reg),
+        .control_a_in(ex_mem_mem_to_reg),
+        .control_b_in(ex_mem_reg_write),
+        //outputs
+        .data_a_out(mem_wb_alu_result),
+        .data_b_out(mem_wb_mem_read_data),
+        .addr_a_out(mem_wb_destination_reg),
+        .control_a_out(mem_wb_mem_to_reg),
+        .control_b_out(mem_wb_reg_write)
+        );
     
      mux2 #(.mux_width(32)) writeback_mux (
         .a(mem_wb_alu_result),
@@ -192,28 +211,5 @@ module mips_32(
         .sel(mem_wb_mem_to_reg),
         .y(write_back_data)
         );  
-    //control unit goe sinside instruction decode                      
-                        /*   
-    control control_unit(
-        .reset(reset),
-        .opcode(inst_31_26),
-        .reg_dst(reg_dst), 
-        .mem_to_reg(mem_to_reg),
-        .alu_op(alu_op),
-        .mem_read(mem_read),  
-        .mem_write(mem_write),
-        .alu_src(alu_src),
-        .reg_write(reg_write),
-        .jump(jump),         // jump instruction
-        .branch(branch)    // branch instruction
-        );*/
-        /*
-    ALUControl ALU_Control_unit(
-        .ALUOp(alu_op),
-        .Function(inst_5_0),
-        .ALU_Control(ALU_Control));  
-        */
-        
-        
         
 endmodule

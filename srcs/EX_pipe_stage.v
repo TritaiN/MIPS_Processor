@@ -35,7 +35,6 @@ module EX_pipe_stage(
         .a(id_ex_reg1),
         .b(mem_wb_write_back_data),
         .c(ex_mem_alu_result),
-        .d(),
         .sel(Forward_A),
         .y(alu_in1)
         );
@@ -44,7 +43,6 @@ module EX_pipe_stage(
         .a(id_ex_reg2),
         .b(mem_wb_write_back_data),
         .c(ex_mem_alu_result),
-        .d(),
         .sel(Forward_B),
         .y(forwardb_output)
         );

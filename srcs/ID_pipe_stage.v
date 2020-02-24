@@ -51,8 +51,18 @@ module ID_pipe_stage (
     assign jump_address = if_id_instr[25:0] << 2;
     assign branch_taken = branch & eq_test_out;
     assign eq_test_out = (reg1 ^ reg2 == 32'd0) ? 1'b1 : 1'b0;
+
+    //set control signals to 0 if have control hazard
     assign control_hazard = Data_Hazard || IF_Flush;
-    
+    always @ (Data_Hazard, IF_Flush) 
+        begin
+        if (control_hazard = 1'b1)
+            begin
+                {mem_to_reg, mem_read, mem_write, 
+                alu_src, reg_write, jump, branch} <= 0;
+            end
+        end
+
      ALU branch_address_alu (
         .a(if_id_pc_plus4),
         .b(imm_value << 2),     //shifted immediate
