@@ -21,7 +21,7 @@
 
 
 module instruction_mem(
-    input [31:0] read_addr,
+    input [9:0] read_addr,
     output [31:0] data
     );
     
@@ -31,7 +31,7 @@ module instruction_mem(
     begin  
 		                                                // instruction           alu result            register content       mem content
 														
-        rom[0] = 32'b00100000000000010000000000000110; // addi r1,r0,#6             6; b110; d6                r1=6                   -
+        rom[0] = 32'b00100000001000010000000000000110; // addi r1,r0,#6             6; b110; d6                r1=6                   -
 //        rom[1] = 32'b11000000001000000000100010000000; // sll r1, r1, 2             b11000, d24                 r1 = 24         
 //        rom[2] = 32'b00110000001000100000000000000000; //andi r1, r2, 2             b0, d0                 r2 = d0
 //        rom[3] = 32'b00000000010000010000000000100111;  //nor r2, r1, r0             b00100, d8                  r0 = 8 

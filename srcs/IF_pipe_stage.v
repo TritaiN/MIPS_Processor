@@ -28,18 +28,24 @@ module IF_pipe_stage(
     input branch_taken,
     input jump,
     output [9:0] pc_plus4,
-    output[31:0] instr
+    output [31:0] instr
     );
-    wire [31:0] pc_plus4_32;
+    
     wire [9:0] branch_mux_out;
-    reg [31:0] pc;
-    assign pc_plus4 = pc_plus4_32[9:0];
-    always @(en == 1'b0)
+    reg [9:0] pc;
+    wire [9:0] pc_out;
+    
+    assign pc_plus4 = pc + 9'b000000100;
+    always @(posedge clk or posedge reset or en)
         begin
-            pc = 32'd0;
+            if (reset)
+                pc = 9'd0;
+            else if (en)
+                pc = pc_out - 9'b000000100;
+            else 
+                pc <= pc_plus4;
         end
   
-    
     //need to add logic for Data_Hazard 
     mux2 #(.mux_width(10)) branch_mux (
         .a(pc_plus4),
@@ -52,20 +58,12 @@ module IF_pipe_stage(
         .a(branch_mux_out),
         .b(jump_address),
         .sel(jump),
-        .y(pc)
+        .y(pc_out)
         );
 
     instruction_mem inst_mem (
         .read_addr(pc),
         .data(instr)
-        );
-
-     ALU pc_plus4_alu (
-        .a(pc),
-        .b(32'd4),             //4
-        .alu_control(4'b0010),  //add
-        .zero(),           
-        .alu_result(pc_plus4_32)
-        );     
+        );   
 
 endmodule

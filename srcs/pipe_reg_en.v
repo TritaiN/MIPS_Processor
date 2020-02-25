@@ -20,22 +20,24 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module pipe_reg_en #(parameter WIDTH = 10) (
+module pipe_reg_en #(parameter WIDTH = 32) (
     input clk, reset,
     input en, flush,
-    input [WIDTH-1:0] x_in, y_in,
-    output reg [WIDTH-1:0] x_out, y_out
+    input [WIDTH-1:0] instr_in,
+    input [WIDTH-23:0] addr_in,
+    output reg [WIDTH-1:0] instr_out,
+    output reg [WIDTH-23:0] addr_out
     );
     
     always @(posedge clk or posedge reset)
     begin
         if(reset)
-            {x_out, y_out} <= 0;
+            {instr_out, addr_out} <= 0;
         else if (flush) 
-            {x_out, y_out} <= 0;
+            {instr_out, addr_out} <= 0;
         else if (en) 
-            x_out <= x_in;
-            y_out <= y_in;
+            instr_out <= instr_in;
+            addr_out <= addr_in;
     end
     
 endmodule

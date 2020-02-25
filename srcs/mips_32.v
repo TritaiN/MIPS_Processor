@@ -42,7 +42,8 @@ module mips_32(
     wire [4:0] id_ex_destination_reg, if_id_rs, if_id_rt;
     // if_id pipeline reg
     wire en;
-    wire [9:0] if_id_pc_plus4, if_id_instr;
+    wire [9:0] if_id_pc_plus4;
+    wire [31:0] if_id_instr;
     // id_pipeline stage
     wire mem_wb_reg_write, Control_Hazard;
     wire [4:0] mem_wb_destination_reg, destination_reg;
@@ -56,7 +57,7 @@ module mips_32(
     wire [1:0] Forward_A, Forward_B; 
     // forwarding unit
     wire ex_mem_reg_write;
-    wire [4:0] ex_mem_write_reg_addr, id_ex_instr_rs, mem_wb_write_reg_addr;
+    wire [4:0] ex_mem_write_reg_addr, mem_wb_write_reg_addr;
     // ex_mem pipeline reg
     wire [31:0] ex_mem_instr;
     wire [4:0] ex_mem_destination_reg;
@@ -84,8 +85,8 @@ module mips_32(
     Hazard_detection hazard_detection_unit(
         .id_ex_mem_read(id_ex_mem_read),
         .id_ex_destination_reg(id_ex_destination_reg),
-        .if_id_rs(if_id_rs),
-        .if_id_rt(if_id_rt),
+        .if_id_rs(if_id_instr[25:21]),
+        .if_id_rt(if_id_instr[20:16]),
         .branch_taken(branch_taken),
         .jump(jump),
         .Data_Hazard(Data_Hazard),
@@ -93,15 +94,15 @@ module mips_32(
         );
                            
     //instantiate IF/ID pipeline register here
-    pipe_reg_en ID_pipeline_reg (
+    pipe_reg_en #(.WIDTH(32)) ID_pipeline_reg (
         .clk(clk),
         .reset(reset),
         .en(en),
         .flush(IF_Flush),
-        .x_in(pc_plus4), 
-        .y_in(instr),
-        .x_out(if_id_pc_plus4),
-        .y_out(if_id_instr)
+        .instr_in(instr), 
+        .addr_in(pc_plus4),
+        .instr_out(if_id_instr),
+        .addr_out(if_id_pc_plus4)
         );
 
     ID_pipe_stage instruction_decode(
@@ -134,31 +135,31 @@ module mips_32(
     pipe_reg ID_EX_pipeline_reg (
         .clk(clk),
         .reset(reset),
-        .data_a_in(if_id_instr),   //data = 32 bits
-        .data_b_in(imm_value),
-        .data_c_in(reg1),
-        .data_d_in(reg2),
-        .addr_a_in(destination_reg),  //addr = 5 bits
-        .addr_b_in(if_id_instr[25:21]),  
-        .addr_c_in(if_id_instr[20:16]),
-        .control_a_in(mem_to_reg),   //control wires
-        .control_b_in(mem_read),
-        .control_c_in(mem_write),
-        .control_d_in(alu_src),
-        .control_e_in(reg_write),
+        .instr_in(if_id_instr),   //data = 32 bits
+        .imm_in(imm_value),
+        .reg1_in(reg1),
+        .reg2_in(reg2),
+        .destination_reg_in(destination_reg),  //addr = 5 bits
+        .instr_rs_in(if_id_instr[25:21]),  
+        .instr_rt_in(if_id_instr[20:16]),
+        .mem_to_reg_in(mem_to_reg),   //control wires
+        .mem_read_in(mem_read),
+        .mem_write_in(mem_write),
+        .alu_src_in(alu_src),
+        .reg_write_in(reg_write),
         .aluop_in(alu_op),
-        .data_a_out(id_ex_instr),
-        .data_b_out(id_ex_imm_value),
-        .data_c_out(id_ex_reg1),    //don't know if should name reg1 or id_ex_reg1
-        .data_d_out(id_ex_reg2),
-        .addr_a_out(id_ex_destination_reg),
-        .addr_b_out(),   //not sure what to name these, rs and rt for forwarding unit
-        .addr_c_out(),
-        .control_a_out(id_ex_mem_to_reg),
-        .control_b_out(id_ex_mem_read),
-        .control_c_out(id_ex_mem_write),
-        .control_d_out(id_ex_alu_src),
-        .control_e_out(id_ex_reg_write),
+        .instr_out(id_ex_instr),
+        .imm_out(id_ex_imm_value),
+        .reg1_out(id_ex_reg1),    //don't know if should name reg1 or id_ex_reg1
+        .reg2_out(id_ex_reg2),
+        .destination_reg_out(id_ex_destination_reg),
+        .instr_rs_out(),   //not sure what to name these, rs and rt for forwarding unit
+        .instr_rt_out(),
+        .mem_to_reg_out(id_ex_mem_to_reg),
+        .mem_read_out(id_ex_mem_read),
+        .mem_write_out(id_ex_mem_write),
+        .alu_src_out(id_ex_alu_src),
+        .reg_write_out(id_ex_reg_write),
         .aluop_out(id_ex_alu_op)
         );
       
@@ -180,7 +181,8 @@ module mips_32(
     Forwarding_unit Forwarding_unit(
         .ex_mem_reg_write(ex_mem_reg_write),
         .ex_mem_write_reg_addr(ex_mem_write_reg_addr),
-        .id_ex_instr_rs(id_ex_instr_rs),
+        .id_ex_instr_rs(id_ex_instr[26:21]),
+        .id_ex_instr_rt(id_ex_instr[20:16]),
         .mem_wb_reg_write(mem_wb_reg_write),
         .mem_wb_write_reg_addr(mem_wb_write_reg_addr),
         .Forward_A(Forward_A),
@@ -192,23 +194,23 @@ module mips_32(
         .clk(clk),
         .reset(reset),
         //inputs
-        .data_a_in(id_ex_instr),   //why does ex_mem need instr?
-        .data_b_in(alu_result),
-        .data_c_in(alu_in2_out),
-        .addr_a_in(id_ex_destination_reg),  //addr = 5 bits
-        .control_a_in(id_ex_mem_to_reg),   //control wires
-        .control_b_in(id_ex_mem_read),
-        .control_c_in(id_ex_mem_write),
-        .control_d_in(id_ex_reg_write),
+        .instr_in(id_ex_instr),   //why does ex_mem need instr?
+        .alu_result_in(alu_result),
+        .alu_in2_in(alu_in2_out),
+        .destination_reg_in(id_ex_destination_reg),  //addr = 5 bits
+        .mem_to_reg_in(id_ex_mem_to_reg),   //control wires
+        .mem_read_in(id_ex_mem_read),
+        .mem_write_in(id_ex_mem_write),
+        .reg_write_in(id_ex_reg_write),
         //outputs
-        .data_a_out(ex_mem_instr),
-        .data_b_out(ex_mem_alu_result),
-        .data_c_out(ex_mem_alu_result),    
-        .addr_a_out(ex_mem_destination_reg),
-        .control_a_out(ex_mem_mem_to_reg),
-        .control_b_out(ex_mem_mem_read),
-        .control_c_out(ex_mem_mem_write),
-        .control_d_out(ex_mem_reg_write)
+        .instr_out(ex_mem_instr),
+        .alu_result_out(ex_mem_alu_result),
+        .alu_in2_out(ex_mem_alu_result),    
+        .destination_reg_out(ex_mem_destination_reg),
+        .mem_to_reg_out(ex_mem_mem_to_reg),
+        .mem_read_out(ex_mem_mem_read),
+        .mem_write_out(ex_mem_mem_write),
+        .reg_write_out(ex_mem_reg_write)
         );
                    
     data_memory data_memory(
@@ -224,17 +226,17 @@ module mips_32(
         .clk(clk),
         .reset(reset),
         //inputs
-        .data_a_in(ex_mem_alu_result),
-        .data_b_in(mem_read_data),
-        .addr_a_in(ex_mem_destination_reg),
-        .control_a_in(ex_mem_mem_to_reg),
-        .control_b_in(ex_mem_reg_write),
+        .alu_result_in(ex_mem_alu_result),
+        .read_data_in(mem_read_data),
+        .destination_reg_in(ex_mem_destination_reg),
+        .mem_to_reg_in(ex_mem_mem_to_reg),
+        .reg_write_in(ex_mem_reg_write),
         //outputs
-        .data_a_out(mem_wb_alu_result),
-        .data_b_out(mem_wb_mem_read_data),
-        .addr_a_out(mem_wb_destination_reg),
-        .control_a_out(mem_wb_mem_to_reg),
-        .control_b_out(mem_wb_reg_write)
+        .alu_result_out(mem_wb_alu_result),
+        .read_data_out(mem_wb_mem_read_data),
+        .destination_reg_out(mem_wb_destination_reg),
+        .mem_to_reg_out(mem_wb_mem_to_reg),
+        .reg_write_out(mem_wb_reg_write)
         );
     
      mux2 #(.mux_width(32)) writeback_mux (
