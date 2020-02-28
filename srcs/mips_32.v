@@ -21,8 +21,8 @@
 
 
 module mips_32(
-    input clk, reset,  
-    output[31:0] result
+    input clk, reset  
+    //output[31:0] result
     );
     
     wire reg_dst, reg_write, alu_src, pc_src, mem_read, mem_write, mem_to_reg;  //name control wires here and input into datapath
@@ -41,7 +41,6 @@ module mips_32(
     wire id_ex_mem_read, IF_Flush;
     wire [4:0] id_ex_destination_reg, if_id_rs, if_id_rt;
     // if_id pipeline reg
-    wire en;
     wire [9:0] if_id_pc_plus4;
     wire [31:0] if_id_instr;
     // id_pipeline stage
@@ -53,11 +52,10 @@ module mips_32(
     wire id_ex_mem_to_reg, id_ex_mem_write, id_ex_alu_src, id_ex_reg_write;
     wire [1:0] id_ex_alu_op;   
     // ex pipeline stage
-    wire [31:0] ex_mem_alu_result, write_back_result, alu_in2_out, alu_result;
+    wire [31:0] ex_mem_alu_result, write_back_result, ex_mem_alu_in2_out, alu_in2_out, alu_result;
     wire [1:0] Forward_A, Forward_B; 
     // forwarding unit
     wire ex_mem_reg_write;
-    wire [4:0] ex_mem_write_reg_addr, mem_wb_write_reg_addr;
     // ex_mem pipeline reg
     wire [31:0] ex_mem_instr;
     wire [4:0] ex_mem_destination_reg;
@@ -97,7 +95,7 @@ module mips_32(
     pipe_reg_en #(.WIDTH(32)) ID_pipeline_reg (
         .clk(clk),
         .reset(reset),
-        .en(en),
+        .en(Data_Hazard),
         .flush(IF_Flush),
         .instr_in(instr), 
         .addr_in(pc_plus4),
@@ -114,7 +112,7 @@ module mips_32(
         .mem_wb_write_reg_addr(mem_wb_destination_reg),
         .mem_wb_write_back_data(write_back_data),
         .Data_Hazard(Data_Hazard),
-        .Control_Hazard(Control_Hazard),
+        .IF_Flush(IF_Flush),
         .reg1(reg1),
         .reg2(reg2),
         .imm_value(imm_value),
@@ -180,11 +178,11 @@ module mips_32(
                   
     Forwarding_unit Forwarding_unit(
         .ex_mem_reg_write(ex_mem_reg_write),
-        .ex_mem_write_reg_addr(ex_mem_write_reg_addr),
+        .ex_mem_write_reg_addr(ex_mem_destination_reg),
         .id_ex_instr_rs(id_ex_instr[26:21]),
         .id_ex_instr_rt(id_ex_instr[20:16]),
         .mem_wb_reg_write(mem_wb_reg_write),
-        .mem_wb_write_reg_addr(mem_wb_write_reg_addr),
+        .mem_wb_write_reg_addr(mem_wb_destination_reg),
         .Forward_A(Forward_A),
         .Forward_B(Forward_B)
         );                       
@@ -205,7 +203,7 @@ module mips_32(
         //outputs
         .instr_out(ex_mem_instr),
         .alu_result_out(ex_mem_alu_result),
-        .alu_in2_out(ex_mem_alu_result),    
+        .alu_in2_out(ex_mem_alu_in2_out),    
         .destination_reg_out(ex_mem_destination_reg),
         .mem_to_reg_out(ex_mem_mem_to_reg),
         .mem_read_out(ex_mem_mem_read),
@@ -218,6 +216,7 @@ module mips_32(
         .mem_access_addr(ex_mem_alu_result),
         .mem_write_en(ex_mem_mem_write),
         .mem_read_en(ex_mem_mem_read),
+        .mem_write_data(ex_mem_alu_in2_out),
         .mem_read_data(mem_read_data)
         );
                         

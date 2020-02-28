@@ -25,14 +25,14 @@ reg clk;
       reg reset;  
       // Outputs  
 
-      wire [31:0] result;
       // Instantiate the Unit Under Test (UUT)  
       mips_32 uut (  
            .clk(clk),   
-           .reset(reset),     
-           .result(result)  
+           .reset(reset)     
+           //.result(result)  
       );  
-      initial begin  
+      initial 
+        begin  
            clk = 0;  
            forever #10 clk = ~clk;  
       end  

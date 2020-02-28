@@ -32,12 +32,17 @@ module pipe_reg_en #(parameter WIDTH = 32) (
     always @(posedge clk or posedge reset)
     begin
         if(reset)
-            {instr_out, addr_out} <= 0;
+        begin
+            instr_out <=0; addr_out <= 0;
+        end
         else if (flush) 
-            {instr_out, addr_out} <= 0;
+            begin
+            instr_out <= 0; addr_out <= 0;
+            end
         else if (en) 
-            instr_out <= instr_in;
-            addr_out <= addr_in;
+            begin
+            instr_out <= instr_in; addr_out <= addr_in;
+            end
     end
     
 endmodule

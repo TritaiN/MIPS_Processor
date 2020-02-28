@@ -39,11 +39,13 @@ module pipe_reg #(parameter WIDTH = 32) (
     begin
         //set all outputs to 0
         if(reset)
-            {instr_out, imm_out, reg1_out, reg2_out, destination_reg_out,
-            instr_rs_out, instr_rt_out, mem_to_reg_out, mem_read_out, alu_result_out, 
-            alu_in2_out, read_data_out, mem_write_out, alu_src_out, reg_write_out, 
-            aluop_out} <= 0;
+            begin instr_out<= 0; imm_out<= 0; reg1_out<= 0; reg2_out<= 0; destination_reg_out<= 0;
+            instr_rs_out<= 0; instr_rt_out<= 0; mem_to_reg_out<= 0; mem_read_out<= 0; alu_result_out<= 0; 
+            alu_in2_out<= 0; read_data_out<= 0; mem_write_out<= 0; alu_src_out<= 0; reg_write_out<= 0; 
+            aluop_out <= 0;
+            end
         else 
+            begin
             instr_out <= instr_in;
             imm_out <= imm_in; 
             reg1_out <= reg1_in;
@@ -63,6 +65,6 @@ module pipe_reg #(parameter WIDTH = 32) (
             reg_write_out <= reg_write_in;
             
             aluop_out <= aluop_in;
-                       
+            end           
     end
 endmodule

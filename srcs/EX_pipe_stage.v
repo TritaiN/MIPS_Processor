@@ -34,6 +34,7 @@ module EX_pipe_stage(
     
     wire [31:0] mem_wb_write_back_data, alu_in1, forwardb_output, alu_in2;
     wire [3:0] ALU_Control;
+    assign alu_in2_out = forwardb_output;
     
     mux4 #(.mux_width(32)) forwarda_mux (
         .a(id_ex_reg1),

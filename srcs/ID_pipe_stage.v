@@ -27,7 +27,6 @@ module ID_pipe_stage (
     input [4:0] mem_wb_write_reg_addr,
     input [31:0] mem_wb_write_back_data,
     input Data_Hazard,
-    input Control_Hazard,
     input IF_Flush,
     output [31:0] reg1, reg2,
     output [31:0] imm_value,
