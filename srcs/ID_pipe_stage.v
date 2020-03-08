@@ -34,35 +34,34 @@ module ID_pipe_stage (
     output [9:0] jump_address,
     output branch_taken,
     output [4:0] destination_reg,
-    output mem_to_reg,
-    output [1:0] alu_op,
-    output mem_read,
-    output mem_write,
-    output alu_src,
-    output reg_write,
-    output jump
+    output mem_to_reg, //
+    output [1:0] alu_op, //
+    output mem_read, //
+    output mem_write, //
+    output alu_src, //
+    output reg_write, //
+    output jump //
     );
     
     wire eq_test_out;
     wire branch;
     wire control_hazard;
     wire reg_dst;
-    assign jump_address = if_id_instr[25:0] << 2'b10;
+    wire cntr_mem_to_reg;
+    wire [1:0] cntr_alu_op;
+    wire cntr_mem_read;
+    wire cntr_mem_write;
+    wire cntr_alu_src;
+    wire cntr_reg_write;
+
+    
+    assign jump_address = if_id_instr[9:0] << 2;
     assign branch_taken = branch & eq_test_out;
     assign eq_test_out = (reg1 ^ reg2 == 32'd0) ? 1'b1 : 1'b0;
-    assign branch_address = if_id_pc_plus4 + (imm_value << 2'b10);
+    assign branch_address = if_id_pc_plus4 + (imm_value[9:0] << 2);
     
     // set control signals to 0 if have control hazard
     assign control_hazard = ~Data_Hazard | IF_Flush;
-//    always @ (Data_Hazard, IF_Flush) 
-//        begin
-//        if (control_hazard == 1'b1)
-//            begin
-//                {mem_to_reg, mem_read, mem_write, 
-//                alu_src, reg_write, jump} <= 0;
-//            end
-//        end
- 
     
     sign_extend sign_ex_inst (
         .sign_ex_in(if_id_instr[15:0]),
@@ -73,23 +72,15 @@ module ID_pipe_stage (
         .reset(reset),
         .opcode(if_id_instr[31:26]),
         .reg_dst(reg_dst),
-        .mem_to_reg(mem_to_reg),
-        .alu_op(alu_op),
-        .mem_read(mem_read),  
-        .mem_write(mem_write),
-        .alu_src(alu_src),
-        .reg_write(reg_write),
+        .mem_to_reg(cntr_mem_to_reg),
+        .alu_op(cntr_alu_op),
+        .mem_read(cntr_mem_read),  
+        .mem_write(cntr_mem_write),
+        .alu_src(cntr_alu_src),
+        .reg_write(cntr_reg_write),
         .jump(jump),         // jump instruction
         .branch(branch)    // branch instruction
         );
-        
-        
-//    mux2 #(.mux_width(32)) control_mux (
-//        .a(),
-//        .b(if_id_instr[20:16]),
-//        .sel(control_hazard),  
-//        .y(destination_reg)
-//        );
         
     register_file reg_file (
         .clk(clk),  
@@ -109,6 +100,48 @@ module ID_pipe_stage (
         .sel(reg_dst),  //output from control unit
         .y(destination_reg)
         );
+        
+    mux2 #(.mux_width(1)) mem_to_reg_mux (
+        .b(1'b0),
+        .a(cntr_mem_to_reg),
+        .sel(control_hazard),  
+        .y(mem_to_reg)
+        );
+        
+    mux2 #(.mux_width(2)) alu_op_mux (
+        .b(2'b00),
+        .a(cntr_alu_op),
+        .sel(control_hazard),  
+        .y(alu_op)
+        );            
     
+    mux2 #(.mux_width(1)) mem_read_mux (
+        .b(1'b0),
+        .a(cntr_mem_read),
+        .sel(control_hazard),  
+        .y(mem_read)
+        );
+        
+    mux2 #(.mux_width(1)) mem_write_mux (
+        .b(1'b0),
+        .a(cntr_mem_write),
+        .sel(control_hazard),  
+        .y(mem_write)
+        );        
+        
+    mux2 #(.mux_width(1)) alu_src_mux(
+        .b(1'b0),
+        .a(cntr_alu_src),
+        .sel(control_hazard),  
+        .y(alu_src)
+        );         
+        
+    mux2 #(.mux_width(1)) reg_write_mux (
+        .b(1'b0),
+        .a(cntr_reg_write),
+        .sel(control_hazard),  
+        .y(reg_write)
+        );        
+        
 endmodule
 

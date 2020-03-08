@@ -21,8 +21,9 @@
 
 
 module mips_32(
-    input clk, reset  
-    //output[31:0] result
+    input clk, reset,
+    
+    output[31:0] result
     );
     
     wire reg_dst, reg_write, alu_src, pc_src, mem_read, mem_write, mem_to_reg;  //name control wires here and input into datapath
@@ -52,7 +53,7 @@ module mips_32(
     wire id_ex_mem_to_reg, id_ex_mem_write, id_ex_alu_src, id_ex_reg_write;
     wire [1:0] id_ex_alu_op;   
     // ex pipeline stage
-    wire [31:0] ex_mem_alu_result, write_back_result, ex_mem_alu_in2_out, alu_in2_out, alu_result;
+    wire [31:0] ex_mem_alu_result, ex_mem_alu_in2_out, alu_in2_out, alu_result;
     wire [1:0] Forward_A, Forward_B; 
     // forwarding unit
     wire ex_mem_reg_write;
@@ -151,8 +152,8 @@ module mips_32(
         .reg1_out(id_ex_reg1),    //don't know if should name reg1 or id_ex_reg1
         .reg2_out(id_ex_reg2),
         .destination_reg_out(id_ex_destination_reg),
-        .instr_rs_out(),   //not sure what to name these, rs and rt for forwarding unit
-        .instr_rt_out(),
+        //.instr_rs_out(),   //not sure what to name these, rs and rt for forwarding unit
+        //.instr_rt_out(),
         .mem_to_reg_out(id_ex_mem_to_reg),
         .mem_read_out(id_ex_mem_read),
         .mem_write_out(id_ex_mem_write),
@@ -168,7 +169,7 @@ module mips_32(
         .id_ex_alu_op(id_ex_alu_op),
         .id_ex_imm_value(id_ex_imm_value),
         .ex_mem_alu_result(ex_mem_alu_result),
-        .mem_wb_write_back_result(write_back_result),
+        .mem_wb_write_back_result(write_back_data),
         .id_ex_alu_src(id_ex_alu_src),
         .Forward_A(Forward_A),
         .Forward_B(Forward_B),
@@ -179,7 +180,7 @@ module mips_32(
     Forwarding_unit Forwarding_unit(
         .ex_mem_reg_write(ex_mem_reg_write),
         .ex_mem_write_reg_addr(ex_mem_destination_reg),
-        .id_ex_instr_rs(id_ex_instr[26:21]),
+        .id_ex_instr_rs(id_ex_instr[25:21]),
         .id_ex_instr_rt(id_ex_instr[20:16]),
         .mem_wb_reg_write(mem_wb_reg_write),
         .mem_wb_write_reg_addr(mem_wb_destination_reg),
@@ -211,7 +212,7 @@ module mips_32(
         .reg_write_out(ex_mem_reg_write)
         );
                    
-    data_memory data_memory(
+    data_memory data_mem(
         .clk(clk),
         .mem_access_addr(ex_mem_alu_result),
         .mem_write_en(ex_mem_mem_write),

@@ -35,15 +35,15 @@ module IF_pipe_stage(
     reg [9:0] pc;
     wire [9:0] pc_out;
     
-    assign pc_plus4 = pc + 9'b000000100;
-    always @(posedge clk or posedge reset or en)
+    assign pc_plus4 = pc + 10'b0000000100;
+    always @(posedge clk or posedge reset)
         begin
             if (reset)
-                pc = 9'd0;
-            else if (en)
-                pc = pc_out - 9'b000000100;
+                pc = 10'd0;
+            else if (en == 0)
+                pc = pc_out - 10'b0000000100;
             else 
-                pc <= pc_plus4;
+                pc = pc_out;
         end
   
     //need to add logic for Data_Hazard 

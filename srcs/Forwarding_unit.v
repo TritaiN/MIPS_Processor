@@ -51,20 +51,20 @@ module Forwarding_unit(
                 end
             
             // forwarding when have data hazard and need to load
-            else if(mem_wb_reg_write == 1 & 
+            else if(mem_wb_reg_write == 1'b1 & 
             (mem_wb_write_reg_addr != 5'b00000) &
-            !(ex_mem_write_reg_addr == (ex_mem_write_reg_addr != 5'b00000) &
-                (ex_mem_write_reg_addr != id_ex_instr_rs) ) &
-            mem_wb_write_reg_addr == id_ex_instr_rs)
+            ~((ex_mem_reg_write == 1'b1) & (ex_mem_write_reg_addr != 5'b00000) &
+                (ex_mem_write_reg_addr == id_ex_instr_rs) ) &
+            (mem_wb_write_reg_addr == id_ex_instr_rs) )
                 begin
                     Forward_A = 2'b01;
                 end
                 
-            else if(mem_wb_reg_write == 1 & 
+            else if(mem_wb_reg_write == 1'b1 & 
             (mem_wb_write_reg_addr != 5'b00000) &
-            !(ex_mem_write_reg_addr == (ex_mem_write_reg_addr != 5'b00000) &
-                (ex_mem_write_reg_addr != id_ex_instr_rt) ) &
-            mem_wb_write_reg_addr == id_ex_instr_rt)
+            ~((ex_mem_reg_write == 1'b1) & (ex_mem_write_reg_addr != 5'b00000) &
+                (ex_mem_write_reg_addr == id_ex_instr_rt) ) &
+            (mem_wb_write_reg_addr == id_ex_instr_rt) )
                 begin
                     Forward_B = 2'b01;
                 end
